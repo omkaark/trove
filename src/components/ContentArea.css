@@ -1,0 +1,147 @@
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--content-sidebar);
+  overflow: hidden;
+}
+
+.content-area-center {
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Drag region for states without header */
+.content-drag-region {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  cursor: default;
+}
+
+.content-area-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 50px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--sidebar-bg);
+  cursor: default;
+}
+
+.content-area-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.content-area-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.content-area-emoji {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.content-area-appName {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.content-area-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.content-area-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.content-area-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.content-icon-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.content-icon-button:hover:not(:disabled) {
+  background: var(--item-hover);
+  border-color: var(--item-selected);
+  color: var(--text-primary);
+}
+
+.content-icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.content-action-button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.content-action-button:hover:not(:disabled) {
+  background: var(--item-hover);
+  border-color: var(--item-selected);
+}
+
+.content-action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.app-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--content-bg);
+  flex: 1;
+}
+
+.loading-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}

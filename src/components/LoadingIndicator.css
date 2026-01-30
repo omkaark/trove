@@ -1,0 +1,234 @@
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 40px;
+}
+
+/* 3x3 bloom loader */
+.loading-grid-loader {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+
+.loading-grid-loader::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 24px;
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(255, 255, 255, 0.08) 26%,
+      transparent 64%
+    ),
+    radial-gradient(
+      circle at 72% 70%,
+      rgba(10, 255, 128, 0.5) 0%,
+      transparent 58%
+    ),
+    radial-gradient(circle at 50% 50%, var(--accent-shadow) 0%, transparent 74%);
+  filter: blur(18px) saturate(160%);
+  opacity: 0.86;
+  z-index: -2;
+  animation: bloom-pulse 2.8s ease-in-out infinite;
+}
+
+.loading-cell {
+  --x: 0px;
+  --y: 0px;
+  --delay: 0s;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.97),
+    var(--accent-hover)
+  );
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.9),
+    0 0 18px var(--accent-shadow),
+    0 0 34px var(--accent-shadow);
+  transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)));
+  will-change: transform, opacity, box-shadow;
+  animation:
+    square-traverse 4.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite
+      var(--delay),
+    square-flash 2.3s ease-in-out infinite var(--delay);
+}
+
+.loading-cell.slot-0 {
+  --x: -36px;
+  --y: -36px;
+  --delay: -1.45s;
+}
+
+.loading-cell.slot-1 {
+  --x: 0px;
+  --y: -36px;
+  --delay: -2.2s;
+}
+
+.loading-cell.slot-2 {
+  --x: 36px;
+  --y: -36px;
+  --delay: -0.85s;
+}
+
+.loading-cell.slot-3 {
+  --x: -36px;
+  --y: 0px;
+  --delay: -2.75s;
+}
+
+.loading-cell.slot-4 {
+  --x: 0px;
+  --y: 0px;
+  --delay: -0.35s;
+}
+
+.loading-cell.slot-5 {
+  --x: 36px;
+  --y: 0px;
+  --delay: -3.05s;
+}
+
+.loading-cell.slot-6 {
+  --x: -36px;
+  --y: 36px;
+  --delay: -1.05s;
+}
+
+.loading-cell.slot-7 {
+  --x: 0px;
+  --y: 36px;
+  --delay: -2.55s;
+}
+
+.loading-cell.slot-8 {
+  --x: 36px;
+  --y: 36px;
+  --delay: -1.7s;
+}
+
+@keyframes square-traverse {
+  0%,
+  100% {
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)))
+      rotate(0deg) scale(0.92);
+  }
+  16% {
+    transform: translate(
+        calc(-50% + (var(--x) * 0.45)),
+        calc(-50% + (var(--y) * 0.45))
+      )
+      rotate(45deg) scale(1.3);
+  }
+  32% {
+    transform: translate(calc(-50% + (var(--y) * -1)), calc(-50% + var(--x)))
+      rotate(90deg) scale(0.88);
+  }
+  48% {
+    transform: translate(
+        calc(-50% + (var(--x) * -1)),
+        calc(-50% + (var(--y) * -1))
+      )
+      rotate(180deg) scale(1.08);
+  }
+  64% {
+    transform: translate(calc(-50% + var(--y)), calc(-50% + (var(--x) * -1)))
+      rotate(270deg) scale(0.94);
+  }
+  82% {
+    transform: translate(
+        calc(-50% + (var(--x) * 0.2)),
+        calc(-50% + (var(--y) * 0.2))
+      )
+      rotate(330deg) scale(1.18);
+  }
+}
+
+@keyframes square-flash {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.95),
+      0 0 26px var(--accent-shadow),
+      0 0 48px var(--accent-shadow);
+  }
+}
+
+@keyframes bloom-pulse {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: 0.66;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.95;
+  }
+}
+
+/* Cancel button */
+.cancel-button {
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancel-button:hover {
+  background: var(--item-hover);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .loading-indicator {
+    padding: 24px;
+    gap: 24px;
+  }
+
+  .loading-grid-loader {
+    width: 146px;
+    height: 146px;
+  }
+
+  .loading-cell {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-grid-loader::before,
+  .loading-cell {
+    animation: none;
+  }
+
+  .loading-cell {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)));
+  }
+}

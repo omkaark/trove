@@ -1,0 +1,249 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--sidebar-bg);
+  border-right: 2px solid var(--sidebar-border);
+  box-shadow:
+    inset 0 1px 0 var(--sidebar-highlight),
+    1px 0 0 rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s ease;
+  z-index: 10;
+}
+
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle:active {
+  background: var(--accent-color);
+  opacity: 0.5;
+}
+
+/* Drag region at top */
+.sidebar-drag-region {
+  height: 50px;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+/* Content area */
+.sidebar-content {
+  flex: 1;
+  margin-top: 10px;
+  overflow-y: auto;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Subtle scrollbar styling */
+.sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.sidebar-content:hover::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Hide scrollbar when showing empty state */
+.sidebar-content:has(.sidebar-empty) {
+  overflow: hidden;
+}
+
+/* Create button */
+.create-app-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.create-app-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.create-app-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.create-app-icon {
+  font-size: 16px;
+  font-weight: 300;
+}
+
+/* Section label and search */
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sidebar-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+}
+
+.sidebar-search {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.sidebar-search::placeholder {
+  color: var(--text-secondary);
+}
+
+.sidebar-search:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-shadow);
+}
+
+/* App list */
+.app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+}
+
+/* Empty state */
+.sidebar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.sidebar-empty p {
+  margin: 0;
+}
+
+.sidebar-empty-hint {
+  font-size: 12px;
+  margin-top: 8px !important;
+  opacity: 0.7;
+}
+
+/* Loading skeleton */
+.sidebar-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.sidebar-skeleton-item {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  grid-template-rows: 12px 10px;
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--item-hover);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton-icon {
+  grid-row: span 2;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--border-color);
+}
+
+.skeleton-line {
+  height: 10px;
+  border-radius: 4px;
+  background: var(--border-color);
+}
+
+.skeleton-line.short {
+  width: 70%;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Footer */
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.help-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.help-button:hover {
+  background: var(--item-hover);
+  border-color: var(--item-selected);
+  color: var(--text-primary);
+}
