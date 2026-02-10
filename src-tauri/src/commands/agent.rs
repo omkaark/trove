@@ -71,6 +71,69 @@ impl Drop for GenerationGuard {
     }
 }
 
+fn process_sidecar_output_line(
+    raw_line: &str,
+    html_content: &mut String,
+    collecting_html: &mut bool,
+    error_occurred: &mut Option<String>,
+) -> Result<(), String> {
+    let line = raw_line.trim();
+
+    if line.starts_with("PROGRESS:") {
+        return Ok(());
+    }
+    if line == "HTML_START" {
+        *collecting_html = true;
+        return Ok(());
+    }
+    if line == "HTML_END" {
+        *collecting_html = false;
+        return Ok(());
+    }
+    if let Some(msg) = line.strip_prefix("ERROR:") {
+        if error_occurred.is_none() {
+            *error_occurred = Some(msg.to_string());
+        }
+        return Ok(());
+    }
+
+    if *collecting_html {
+        let extra = if html_content.is_empty() { 0 } else { 1 };
+        if html_content.len() + raw_line.len() + extra > MAX_HTML_BYTES {
+            return Err("Generated HTML exceeded size limit".to_string());
+        }
+        if !html_content.is_empty() {
+            html_content.push('\n');
+        }
+        html_content.push_str(raw_line);
+    }
+
+    Ok(())
+}
+
+fn process_sidecar_stdout_chunk(
+    chunk: &[u8],
+    stdout_buffer: &mut String,
+    html_content: &mut String,
+    collecting_html: &mut bool,
+    error_occurred: &mut Option<String>,
+) -> Result<(), String> {
+    let chunk = String::from_utf8_lossy(chunk);
+    stdout_buffer.push_str(&chunk);
+
+    while let Some(newline_idx) = stdout_buffer.find('\n') {
+        let mut line = stdout_buffer[..newline_idx].to_string();
+        if line.ends_with('\r') {
+            line.pop();
+        }
+
+        process_sidecar_output_line(&line, html_content, collecting_html, error_occurred)?;
+        stdout_buffer.drain(..=newline_idx);
+    }
+
+    Ok(())
+}
+
 #[derive(Clone, serde::Serialize)]
 pub struct GenerationComplete {
     pub app: AppMetadata,
@@ -122,6 +185,7 @@ async fn run_sidecar(
     let mut html_content = String::new();
     let mut collecting_html = false;
     let mut error_occurred: Option<String> = None;
+    let mut stdout_buffer = String::new();
 
     loop {
         if GENERATION_CANCELLED.load(Ordering::SeqCst) {
@@ -138,31 +202,16 @@ async fn run_sidecar(
 
         use tauri_plugin_shell::process::CommandEvent;
         match event {
-            CommandEvent::Stdout(line) => {
-                let line = String::from_utf8_lossy(&line);
-                let line = line.trim();
-
-                if line.starts_with("PROGRESS:") {
-                    continue;
-                } else if line == "HTML_START" {
-                    collecting_html = true;
-                } else if line == "HTML_END" {
-                    collecting_html = false;
-                } else if line.starts_with("ERROR:") {
-                    if error_occurred.is_none() {
-                        let msg = line.strip_prefix("ERROR:").unwrap_or("Unknown error");
-                        error_occurred = Some(msg.to_string());
-                    }
-                } else if collecting_html {
-                    let extra = if html_content.is_empty() { 0 } else { 1 };
-                    if html_content.len() + line.len() + extra > MAX_HTML_BYTES {
-                        kill_active_child();
-                        return Err("Generated HTML exceeded size limit".to_string());
-                    }
-                    if !html_content.is_empty() {
-                        html_content.push('\n');
-                    }
-                    html_content.push_str(line);
+            CommandEvent::Stdout(chunk) => {
+                if let Err(err) = process_sidecar_stdout_chunk(
+                    &chunk,
+                    &mut stdout_buffer,
+                    &mut html_content,
+                    &mut collecting_html,
+                    &mut error_occurred,
+                ) {
+                    kill_active_child();
+                    return Err(err);
                 }
             }
             CommandEvent::Stderr(line) => {
@@ -186,6 +235,19 @@ async fn run_sidecar(
             }
             _ => {}
         }
+    }
+
+    if !stdout_buffer.is_empty() {
+        let trailing = stdout_buffer.trim_end_matches('\r').to_string();
+        if let Err(err) = process_sidecar_output_line(
+            &trailing,
+            &mut html_content,
+            &mut collecting_html,
+            &mut error_occurred,
+        ) {
+            return Err(err);
+        }
+        stdout_buffer.clear();
     }
 
     if let Some(err) = error_occurred.take() {
@@ -338,4 +400,99 @@ pub fn cancel_generation(window: Window) -> Result<(), String> {
         },
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        process_sidecar_output_line, process_sidecar_stdout_chunk, MAX_HTML_BYTES,
+    };
+
+    #[test]
+    fn parses_html_markers_when_chunk_contains_multiple_lines() {
+        let mut stdout_buffer = String::new();
+        let mut html_content = String::new();
+        let mut collecting_html = false;
+        let mut error: Option<String> = None;
+
+        process_sidecar_stdout_chunk(
+            b"PROGRESS:Generating...\nHTML_START\n<!DOCTYPE html>\n<html></html>\nHTML_END\n",
+            &mut stdout_buffer,
+            &mut html_content,
+            &mut collecting_html,
+            &mut error,
+        )
+        .expect("chunk should parse");
+
+        assert!(stdout_buffer.is_empty());
+        assert_eq!(html_content, "<!DOCTYPE html>\n<html></html>");
+        assert!(!collecting_html);
+        assert!(error.is_none());
+    }
+
+    #[test]
+    fn parses_marker_when_split_across_chunks() {
+        let mut stdout_buffer = String::new();
+        let mut html_content = String::new();
+        let mut collecting_html = false;
+        let mut error: Option<String> = None;
+
+        process_sidecar_stdout_chunk(
+            b"HTML_STA",
+            &mut stdout_buffer,
+            &mut html_content,
+            &mut collecting_html,
+            &mut error,
+        )
+        .expect("first chunk should parse");
+
+        assert_eq!(stdout_buffer, "HTML_STA");
+
+        process_sidecar_stdout_chunk(
+            b"RT\n<body>\n",
+            &mut stdout_buffer,
+            &mut html_content,
+            &mut collecting_html,
+            &mut error,
+        )
+        .expect("second chunk should parse");
+
+        assert!(collecting_html);
+        assert_eq!(html_content, "<body>");
+    }
+
+    #[test]
+    fn stores_sidecar_error_line() {
+        let mut html_content = String::new();
+        let mut collecting_html = false;
+        let mut error: Option<String> = None;
+
+        process_sidecar_output_line(
+            "ERROR:Claude Code CLI not found",
+            &mut html_content,
+            &mut collecting_html,
+            &mut error,
+        )
+        .expect("error line should parse");
+
+        assert_eq!(error.as_deref(), Some("Claude Code CLI not found"));
+    }
+
+    #[test]
+    fn rejects_html_larger_than_limit() {
+        let mut html_content = String::new();
+        let mut collecting_html = true;
+        let mut error: Option<String> = None;
+        let oversized = "a".repeat(MAX_HTML_BYTES + 1);
+
+        let err = process_sidecar_output_line(
+            &oversized,
+            &mut html_content,
+            &mut collecting_html,
+            &mut error,
+        )
+        .expect_err("oversized html should fail");
+
+        assert_eq!(err, "Generated HTML exceeded size limit");
+    }
 }
