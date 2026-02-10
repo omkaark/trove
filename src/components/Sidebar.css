@@ -233,7 +233,7 @@
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(128, 128, 128, 0.4);
   background: transparent;
   color: var(--text-secondary);
   font-size: 14px;
